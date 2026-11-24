@@ -18,3 +18,27 @@ if (printButton) {
   printButton.hidden = false;
   printButton.addEventListener('click', () => window.print());
 }
+
+// Content stays visible when motion is reduced or observation is unavailable.
+const timelineSteps = [...document.querySelectorAll('.timeline-step')];
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+if (timelineSteps.length && !motionPreference.matches && 'IntersectionObserver' in window) {
+  const reveal = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        reveal.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  timelineSteps.forEach(step => {
+    step.classList.add('will-reveal');
+    reveal.observe(step);
+  });
+  motionPreference.addEventListener('change', event => {
+    if (event.matches) {
+      reveal.disconnect();
+      timelineSteps.forEach(step => step.classList.remove('will-reveal'));
+    }
+  });
+}
